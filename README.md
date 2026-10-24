@@ -13,8 +13,8 @@
 
 格子少不是我懶，是被蛇吃掉了。
 
-### 😂 來都來了，聽個笑話再走
+### 📈 今日盤後
 
-![隨機工程師笑話](https://readme-jokes.vercel.app/api)
+![台股加權指數盤後](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/twse.json&style=for-the-badge)
 
-<sub>笑話是英文的，看不懂也沒關係，我也是盤後才看懂。</sub>
+<sub>每個交易日收盤後自動更新。盤中？盤中我不看的。</sub>
