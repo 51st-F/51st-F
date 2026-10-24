@@ -1,6 +1,6 @@
 ### 嗨，路過的朋友 👋
 
-- 🐍 會寫 **Python**，剩下的交給 **Claude Code**，主要負責燒 token
+- 會寫 **Python**，剩下的交給 **Claude Code**，主要負責燒 token
 - 💤 commit 頻率約等於颱風假的頻率
 
 ### 🐍 我的 commit 被吃掉了
@@ -13,8 +13,13 @@
 
 格子少不是我懶，是被蛇吃掉了。
 
-### 📈 今日盤後
+### 今日盤後
 
 ![台股加權指數盤後](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/twse.json&style=for-the-badge)
+![櫃買指數盤後](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/tpex.json&style=for-the-badge)
+
+![三大法人買賣超](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/institutional.json&style=for-the-badge)
+
+![加權指數近一個月走勢](https://raw.githubusercontent.com/51st-F/51st-F/output/twse-chart.svg)
 
 <sub>每個交易日收盤後自動更新。盤中？盤中我不看的。</sub>

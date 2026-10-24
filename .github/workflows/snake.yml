@@ -1,9 +1,9 @@
-name: Generate snake & TWSE badge
+name: Generate snake & market report
 
 on:
   schedule:
-    # 台灣時間 15:00，收盤資料已公布
-    - cron: "0 7 * * *"
+    # 台灣時間 16:30，三大法人資料也已公布
+    - cron: "30 8 * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -19,11 +19,11 @@ jobs:
       - uses: actions/checkout@v4
 
       # 要在 snk 之前跑：snk 以 root 身分建立 dist/，之後一般使用者就寫不進去
-      - name: Generate TWSE badge
+      - name: Generate market report
         continue-on-error: true
         run: |
           mkdir -p dist
-          python3 scripts/twse_badge.py dist/twse.json
+          python3 scripts/market_report.py dist
 
       - uses: Platane/snk@v3
         with:
