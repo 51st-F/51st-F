@@ -1,4 +1,4 @@
-"""抓台股盤後資料，輸出 shields.io endpoint badge 用的 JSON 和近一個月走勢 SVG。
+"""抓台股盤後資料，輸出 shields.io endpoint badge 用的 JSON 和自選看板 SVG。
 
 每一項各自獨立，某一項抓不到不影響其他項目；只要有任何一項失敗，最後以非零狀態結束。
 """
@@ -14,6 +14,10 @@ TWSE_INDEX_API = "https://openapi.twse.com.tw/v1/exchangeReport/MI_INDEX"
 TWSE_HISTORY_API = "https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?response=json&date={date}"
 TPEX_INDEX_API = "https://www.tpex.org.tw/openapi/v1/tpex_index"
 INSTITUTIONAL_API = "https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json"
+YAHOO_CHART_API = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range=1mo&interval=1d"
+
+# 看板上的美股，(代號, 顯示名稱)
+WATCHLIST = [("TSLA", "特斯拉"), ("NVDA", "輝達"), ("SPCX", "SpaceX")]
 
 # 台股慣例：紅漲綠跌
 UP, DOWN, FLAT = "#e5534b", "#3fb950", "#8b949e"
@@ -60,16 +64,6 @@ def mood(pct):
     return "盤後才知道錯過了什麼 🚀"
 
 
-def month_mood(pct):
-    if pct <= -5:
-        return "這個月不要問 🫥"
-    if pct < 0:
-        return "這個月有點綠 🥬"
-    if pct < 5:
-        return "這個月還行 🙂"
-    return "這個月我只是看著它漲 🫡"
-
-
 def twse_badge(out_dir):
     rows = fetch_json(TWSE_INDEX_API)
     row = next(r for r in rows if r["指數"] == "發行量加權股價指數")
@@ -113,41 +107,70 @@ def twse_history(days=22):
     return rows[-days:]
 
 
-def twse_chart(out_dir):
-    points = twse_history()
-    w, h, pad_x, pad_top, pad_bottom = 480, 140, 12, 36, 22
-    values = [v for _, v in points]
+def us_history(symbol):
+    result = fetch_json(YAHOO_CHART_API.format(symbol=symbol))["chart"]["result"][0]
+    closes = result["indicators"]["quote"][0]["close"]
+    return [c for c in closes if c is not None]
+
+
+def sparkline(values, x, y, w, h, color):
     lo, hi = min(values), max(values)
     span = (hi - lo) or 1
-    xs = [pad_x + i * (w - 2 * pad_x) / (len(points) - 1) for i in range(len(points))]
-    ys = [pad_top + (hi - v) / span * (h - pad_top - pad_bottom) for v in values]
-    line = " ".join(f"{x:.1f},{y:.1f}" for x, y in zip(xs, ys))
-    area = f"{xs[0]:.1f},{h - pad_bottom} {line} {xs[-1]:.1f},{h - pad_bottom}"
+    xs = [x + i * w / (len(values) - 1) for i in range(len(values))]
+    ys = [y + (hi - v) / span * h for v in values]
+    line = " ".join(f"{px:.1f},{py:.1f}" for px, py in zip(xs, ys))
+    area = f"{xs[0]:.1f},{y + h} {line} {xs[-1]:.1f},{y + h}"
+    return (
+        f'<polygon points="{area}" fill="{color}" fill-opacity="0.12"/>'
+        f'<polyline points="{line}" fill="none" stroke="{color}" stroke-width="2" stroke-linejoin="round"/>'
+        f'<circle cx="{xs[-1]:.1f}" cy="{ys[-1]:.1f}" r="3" fill="{color}"/>'
+    )
 
-    change = values[-1] - values[0]
-    pct = change / values[0] * 100
-    color = color_of(change)
-    title = f"近 {len(points)} 個交易日 {arrow_of(change)}{abs(pct):.2f}%・{month_mood(pct)}"
+
+def watchlist_chart(out_dir):
+    # (名稱, 副標, 收盤序列, 價格格式)
+    cards = [("台股加權", "TAIEX", [v for _, v in twse_history()], "{:,.0f}")]
+    for symbol, name in WATCHLIST:
+        cards.append((symbol, name, us_history(symbol), "{:,.2f}"))
+
+    day_pct = {c[0]: (c[2][-1] / c[2][-2] - 1) * 100 for c in cards}
+    best = max(day_pct, key=day_pct.get)
+    worst = min(day_pct, key=day_pct.get)
+    headline = f"今天最會漲：{best} {day_pct[best]:+.2f}% 🚀　最拖：{worst} {day_pct[worst]:+.2f}% 🐢"
+
+    card_w, card_h, gap, top = 290, 112, 12, 34
+    w, h = card_w * 2 + gap, top + card_h * 2 + gap
     font = "font-family='-apple-system,Segoe UI,Noto Sans TC,sans-serif'"
+    parts = [f'<text x="0" y="20" {font} font-size="14" font-weight="600" fill="{FLAT}">{headline}</text>']
 
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
-  <text x="{pad_x}" y="20" {font} font-size="14" font-weight="600" fill="{FLAT}">{title}</text>
-  <polygon points="{area}" fill="{color}" fill-opacity="0.12"/>
-  <polyline points="{line}" fill="none" stroke="{color}" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="{xs[-1]:.1f}" cy="{ys[-1]:.1f}" r="3.5" fill="{color}"/>
-  <text x="{pad_x}" y="{h - 6}" {font} font-size="11" fill="{FLAT}">{points[0][0]}　{values[0]:,.0f}</text>
-  <text x="{w - pad_x}" y="{h - 6}" {font} font-size="11" fill="{FLAT}" text-anchor="end">{points[-1][0]}　{values[-1]:,.0f}</text>
-</svg>
-"""
-    with open(os.path.join(out_dir, "twse-chart.svg"), "w", encoding="utf-8") as f:
+    for i, (name, sub, values, fmt) in enumerate(cards):
+        cx = (i % 2) * (card_w + gap)
+        cy = top + (i // 2) * (card_h + gap)
+        pct = day_pct[name]
+        month_pct = (values[-1] / values[0] - 1) * 100
+        color = color_of(pct)
+        parts.append(
+            f'<g transform="translate({cx},{cy})">'
+            f'<rect x="0.5" y="0.5" width="{card_w - 1}" height="{card_h - 1}" rx="10" fill="none" stroke="{FLAT}" stroke-opacity="0.35"/>'
+            f'<text x="14" y="24" {font} font-size="14" font-weight="700" fill="{FLAT}">{name}'
+            f'<tspan font-size="11" font-weight="400" dx="6">{sub}</tspan></text>'
+            f'<text x="{card_w - 14}" y="24" {font} font-size="11" fill="{FLAT}" text-anchor="end">近一月 {month_pct:+.1f}%</text>'
+            f'<text x="14" y="52" {font} font-size="20" font-weight="700" fill="{color}">{fmt.format(values[-1])}'
+            f'<tspan font-size="13" font-weight="600" dx="8">{arrow_of(pct)}{abs(pct):.2f}%</tspan></text>'
+            + sparkline(values, 14, 64, card_w - 28, 36, color_of(month_pct))
+            + "</g>"
+        )
+
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">\n' + "\n".join(parts) + "\n</svg>\n"
+    with open(os.path.join(out_dir, "watchlist.svg"), "w", encoding="utf-8") as f:
         f.write(svg)
-    print(title)
+    print(headline)
 
 
 def main(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     failed = False
-    for job in (twse_badge, tpex_badge, institutional_badge, twse_chart):
+    for job in (twse_badge, tpex_badge, institutional_badge, watchlist_chart):
         try:
             job(out_dir)
         except Exception:

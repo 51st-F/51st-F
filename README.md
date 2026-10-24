@@ -20,6 +20,6 @@
 
 ![三大法人買賣超](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/institutional.json&style=for-the-badge)
 
-![加權指數近一個月走勢](https://raw.githubusercontent.com/51st-F/51st-F/output/twse-chart.svg)
+![盤後看板：台股加權、TSLA、NVDA、SPCX](https://raw.githubusercontent.com/51st-F/51st-F/output/watchlist.svg)
 
-<sub>每個交易日收盤後自動更新。盤中？盤中我不看的。</sub>
+<sub>每個交易日收盤後自動更新。</sub>
