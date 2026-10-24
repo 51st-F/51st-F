@@ -18,15 +18,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 要在 snk 之前跑：snk 以 root 身分建立 dist/，之後一般使用者就寫不進去
+      - name: Generate TWSE badge
+        continue-on-error: true
+        run: |
+          mkdir -p dist
+          python3 scripts/twse_badge.py dist/twse.json
+
       - uses: Platane/snk@v3
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
             dist/github-snake.svg
             dist/github-snake-dark.svg?palette=github-dark
-
-      - name: Generate TWSE badge
-        run: python3 scripts/twse_badge.py dist/twse.json
 
       - uses: crazy-max/ghaction-github-pages@v4
         with:
