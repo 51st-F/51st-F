@@ -15,11 +15,12 @@
 
 ### 今日盤後
 
-![台股加權指數盤後](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/twse.json&style=for-the-badge)
-![櫃買指數盤後](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/tpex.json&style=for-the-badge)
+#### 🇹🇼 台股
 
-![三大法人買賣超](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/51st-F/51st-F/output/institutional.json&style=for-the-badge)
+![台股盤後：加權指數、櫃買指數、三大法人](https://raw.githubusercontent.com/51st-F/51st-F/output/tw.svg)
 
-![盤後看板：台股加權、TSLA、NVDA、SPCX](https://raw.githubusercontent.com/51st-F/51st-F/output/watchlist.svg)
+#### 🇺🇸 美股（前一晚收盤）
+
+![美股：TSLA、NVDA、SPCX](https://raw.githubusercontent.com/51st-F/51st-F/output/us.svg)
 
 <sub>每個交易日收盤後自動更新。</sub>
